@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はじめてのClaude Code — Online Meetup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+  :root {
+    --c-indigo: #667eea;
+    --c-purple: #764ba2;
+    --c-coral: #f5576c;
+    --c-pink: #f093fb;
+    --c-sky: #4facfe;
+    --c-mint: #00f2fe;
+    --c-warm: #ffecd2;
+    --c-peach: #fcb69f;
+    --c-dark: #1a1a2e;
+    --c-text: #212529;
+    --c-sub: #6c757d;
+    --radius: 20px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Progress Bar ===== */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--c-indigo), var(--c-coral), var(--c-pink));
+    z-index: 9999;
+    transition: width 0.15s ease-out;
+    width: 0%;
+  }
+
+  /* ===== Sections ===== */
+  section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== Fade-in animation ===== */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .fade-in.delay-1 { transition-delay: 0.12s; }
+  .fade-in.delay-2 { transition-delay: 0.24s; }
+  .fade-in.delay-3 { transition-delay: 0.36s; }
+  .fade-in.delay-4 { transition-delay: 0.48s; }
+
+  /* ===== Backgrounds ===== */
+  .bg-hero     { background: linear-gradient(135deg, var(--c-indigo) 0%, var(--c-purple) 50%, var(--c-coral) 100%); }
+  .bg-host     { background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); }
+  .bg-flow     { background: linear-gradient(135deg, var(--c-sky) 0%, var(--c-mint) 100%); }
+  .bg-compare  { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+  .bg-keywords { background: linear-gradient(135deg, var(--c-purple) 0%, var(--c-coral) 100%); }
+  .bg-demo     { background: linear-gradient(135deg, #0c3483 0%, #a2b6df 50%, #6b8cce 100%); }
+  .bg-qa       { background: linear-gradient(135deg, var(--c-warm) 0%, var(--c-peach) 100%); color: var(--c-text); }
+  .bg-step1    { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); color: var(--c-text); }
+  .bg-step2    { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); color: var(--c-text); }
+  .bg-step3    { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); color: var(--c-text); }
+  .bg-share    { background: linear-gradient(135deg, var(--c-warm) 0%, var(--c-peach) 50%, var(--c-pink) 100%); }
+  .bg-deep     { background: linear-gradient(135deg, var(--c-dark) 0%, #16213e 50%, #0f3460 100%); }
+  .bg-faq      { background: linear-gradient(135deg, #2d3436 0%, #636e72 100%); }
+  .bg-end      { background: linear-gradient(135deg, var(--c-coral) 0%, var(--c-pink) 50%, var(--c-indigo) 100%); }
+
+  /* ===== Typography ===== */
+  .title-huge {
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .title-big {
+    font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 20px;
+  }
+
+  .subtitle {
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    font-weight: 400;
+    opacity: 0.9;
+    margin-bottom: 24px;
+    line-height: 1.7;
+  }
+
+  .emoji-big {
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    margin-bottom: 16px;
+  }
+
+  /* ===== Badge ===== */
+  .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 8px 24px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: 0.08em;
+  }
+  .badge-dark {
+    background: rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.1);
+    color: inherit;
+  }
+
+  /* ===== Glass Card ===== */
+  .glass {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius);
+  }
+
+  /* ===== Cards ===== */
+  .card-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 24px;
+    max-width: 1100px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    min-width: 200px;
+    max-width: 300px;
+    flex: 1;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card:hover { transform: translateY(-6px); }
+
+  .card-emoji { font-size: 2.5rem; margin-bottom: 10px; }
+  .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+  .card-text { font-size: 0.95rem; opacity: 0.85; line-height: 1.7; }
+
+  /* ===== Compare ===== */
+  .compare-box {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 24px;
+    max-width: 900px;
+  }
+
+  .compare-item {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 36px 32px;
+    flex: 1;
+    min-width: 280px;
+    max-width: 400px;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s;
+  }
+  .compare-item:hover { transform: scale(1.02); }
+  .compare-item h3 { font-size: 1.6rem; margin-bottom: 16px; }
+  .compare-item ul { list-style: none; text-align: left; padding: 0; }
+  .compare-item li {
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+    padding-left: 32px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .compare-item li::before { position: absolute; left: 0; }
+  .compare-item.before li::before { content: "💬"; }
+  .compare-item.after li::before  { content: "⚡"; }
+
+  /* ===== Flow ===== */
+  .flow-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 28px;
+    max-width: 1000px;
+  }
+
+  .flow-item {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 24px 20px;
+    flex: 1;
+    min-width: 160px;
+    max-width: 220px;
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: transform 0.3s;
+  }
+  .flow-item:hover { transform: translateY(-4px); }
+  .flow-time { font-size: 2.2rem; font-weight: 900; margin-bottom: 4px; }
+  .flow-time span { font-size: 0.9rem; }
+  .flow-label { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+  .flow-desc { font-size: 0.85rem; opacity: 0.75; line-height: 1.5; }
+
+  /* ===== Code Block ===== */
+  .code-block {
+    background: rgba(0,0,0,0.35);
+    border-radius: 16px;
+    padding: 28px 32px;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+    text-align: left;
+    margin-top: 20px;
+    max-width: 700px;
+    width: 100%;
+    line-height: 1.9;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .code-block-light {
+    background: rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.1);
+    color: #333;
+  }
+  .code-prompt { color: #7ee787; font-weight: 700; }
+  .code-prompt-dark { color: #2d8a4e; font-weight: 700; }
+  .code-comment { color: #8b949e; }
+  .code-highlight { color: #ffd700; }
+
+  /* ===== Step Number ===== */
+  .step-number {
+    font-size: 7rem;
+    font-weight: 900;
+    opacity: 0.08;
+    position: absolute;
+    top: 30px;
+    right: 50px;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  /* ===== Topic cards (hands-on) ===== */
+  .topic-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    max-width: 900px;
+  }
+
+  .topic-card {
+    background: rgba(0,0,0,0.07);
+    border-radius: 16px;
+    padding: 24px 20px;
+    min-width: 220px;
+    max-width: 260px;
+    flex: 1;
+    border: 2px dashed rgba(0,0,0,0.12);
+    text-align: center;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .topic-card:hover { transform: translateY(-4px); border-color: rgba(0,0,0,0.25); }
+  .topic-card .card-emoji { font-size: 2rem; margin-bottom: 8px; }
+  .topic-card .card-title { font-size: 1rem; line-height: 1.5; }
+
+  /* ===== FAQ ===== */
+  .faq-section { max-width: 800px; width: 100%; margin-top: 24px; }
+
+  .faq-item {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    text-align: left;
+    transition: transform 0.2s;
+  }
+  .faq-item:hover { transform: translateX(4px); }
+
+  .faq-q {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .faq-q-badge {
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  .faq-a {
+    font-size: 0.95rem;
+    line-height: 1.9;
+    opacity: 0.9;
+    padding-left: 4px;
+  }
+  .faq-a strong { opacity: 1; }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 8px;
+  }
+
+  .faq-grid-item {
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 20px 18px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.3s, background 0.3s;
+  }
+  .faq-grid-item:hover { transform: translateY(-3px); background: rgba(255,255,255,0.14); }
+  .faq-grid-item strong { display: block; margin-bottom: 6px; font-size: 0.95rem; }
+
+  /* ===== Share Card ===== */
+  .share-card {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: 36px 40px;
+    max-width: 700px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .share-card p { font-size: 1.2rem; line-height: 2; }
+
+  /* ===== Next Steps ===== */
+  .next-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    max-width: 600px;
+    width: 100%;
+  }
+  .next-list li {
+    font-size: 1.2rem;
+    margin-bottom: 14px;
+    padding: 16px 24px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    text-align: left;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.3s;
+  }
+  .next-list li:hover { transform: translateX(6px); }
+
+  /* ===== Decorations ===== */
+  .deco {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.07;
+    pointer-events: none;
+    background: #fff;
+  }
+  .deco-1 { width: 350px; height: 350px; top: -100px; right: -100px; }
+  .deco-2 { width: 250px; height: 250px; bottom: -80px; left: -80px; }
+  .deco-3 { width: 180px; height: 180px; top: 40%; left: -60px; }
+
+  /* ===== Scroll hint ===== */
+  .scroll-hint {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.4;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    animation: float 2.5s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(10px); }
+  }
+
+  /* ===== Pulse dot for live sections ===== */
+  .pulse-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #7ee787;
+    margin-right: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* ===== Host section ===== */
+  .host-card {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 700px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.12);
+    text-align: left;
+  }
+
+  .host-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-indigo), var(--c-coral));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,0.2);
+  }
+
+  .host-info h3 {
+    font-size: 1.4rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+
+  .host-info p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    opacity: 0.85;
+  }
+
+  .host-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 3px 12px;
+    font-size: 0.8rem;
+    margin-right: 6px;
+    margin-top: 8px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 700px) {
+    section { padding: 60px 20px; }
+    .faq-grid { grid-template-columns: 1fr; }
+    .host-card { flex-direction: column; text-align: center; padding: 28px 24px; gap: 20px; }
+    .compare-box { gap: 16px; }
+    .code-block { padding: 20px; font-size: 0.82rem; }
+    .step-number { font-size: 5rem; right: 20px; }
+    .card { min-width: 250px; }
+    .flow-item { min-width: 140px; padding: 18px 14px; }
+  }
+
+  @media (max-width: 400px) {
+    .title-huge { font-size: 2.4rem; }
+    .title-big { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ==================== 1. HERO ==================== -->
+<section class="bg-hero">
+  <div class="deco deco-1"></div>
+  <div class="deco deco-2"></div>
+  <div class="deco deco-3"></div>
+  <div class="fade-in">
+    <div class="badge">ONLINE MEETUP</div>
+  </div>
+  <div class="title-huge fade-in delay-1">はじめての<br>Claude Code</div>
+  <p class="subtitle fade-in delay-2">チャットの先へ。<br>AIに「手足」を渡してみよう。</p>
+  <p class="fade-in delay-3" style="opacity:0.5; font-size:0.9rem; margin-top:12px;">60 min | ポップにいこう!</p>
+  <div class="scroll-hint">scroll ▼</div>
+</section>
+
+<!-- ==================== 2. HOST ==================== -->
+<section class="bg-host">
+  <div class="deco deco-1"></div>
+  <div class="fade-in">
+    <div class="badge"><span class="pulse-dot"></span>TODAY'S HOST</div>
+  </div>
+  <div class="host-card fade-in delay-1">
+    <div class="host-avatar">🧑‍💻</div>
+    <div class="host-info">
+      <h3><!-- ここにお名前 -->ホスト名</h3>
+      <p>
+        普段は建設業界で設備管理をしています。<br>
+        Claude Codeを使って、仕事のタスク管理・<br>
+        資料作成・メール対応をAIと一緒にやってます。
+      </p>
+      <div>
+        <span class="host-tag">Claude Code歴 3ヶ月</span>
+        <span class="host-tag">非エンジニア</span>
+        <span class="host-tag">AI秘書運用中</span>
+      </div>
+    </div>
+  </div>
+  <p class="subtitle fade-in delay-2" style="margin-top:28px; max-width:600px; font-size:1rem;">
+    エンジニアじゃなくても、ここまでできる。<br>今日はその入り口を一緒に体験しましょう!
+  </p>
+</section>
+
+<!-- ==================== 3. FLOW ==================== -->
+<section class="bg-flow">
+  <div class="title-big fade-in">今日のながれ</div>
+  <div class="flow-row">
+    <div class="flow-item fade-in delay-1">
+      <div class="flow-time">10<span>min</span></div>
+      <div class="flow-label">講義</div>
+      <div class="flow-desc">チャットとの違いを知る</div>
+    </div>
+    <div class="flow-item fade-in delay-2">
+      <div class="flow-time">5<span>min</span></div>
+      <div class="flow-label">質問</div>
+      <div class="flow-desc">気になること聞いちゃおう</div>
+    </div>
+    <div class="flow-item fade-in delay-3">
+      <div class="flow-time">30<span>min</span></div>
+      <div class="flow-label">ハンズオン</div>
+      <div class="flow-desc">実際に触ってみる!</div>
+    </div>
+    <div class="flow-item fade-in delay-4">
+      <div class="flow-time">15<span>min</span></div>
+      <div class="flow-label">クロージング</div>
+      <div class="flow-desc">感想 & 次のステップ</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. COMPARE ==================== -->
+<section class="bg-compare">
+  <div class="title-big fade-in">何が違うの?</div>
+  <div class="compare-box">
+    <div class="compare-item before fade-in delay-1">
+      <h3>💬 チャット</h3>
+      <ul>
+        <li>質問すると答えてくれる</li>
+        <li>会話はその場限り</li>
+        <li>コピペで受け渡し</li>
+        <li>「教えてくれる人」</li>
+      </ul>
+    </div>
+    <div class="compare-item after fade-in delay-2">
+      <h3>⚡ Claude Code</h3>
+      <ul>
+        <li>ファイルを読み書きできる</li>
+        <li>作業が手元に残る</li>
+        <li>ツールで外部連携も</li>
+        <li>「一緒に作業する相棒」</li>
+      </ul>
+    </div>
+  </div>
+  <div class="fade-in delay-3" style="margin-top:32px; max-width:800px; width:100%;">
+    <div class="faq-item" style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.25);">
+      <div class="faq-q">
+        <span class="faq-q-badge">vs</span>
+        <span>Code in Chrome（拡張機能）との違いは?</span>
+      </div>
+      <div class="faq-a">
+        <strong>Code in Chrome</strong> = ブラウザ上で動く。Webページの操作が得意。<br>
+        <strong>Claude Code</strong> = あなたのPC上で動く。<strong>ファイル作成・フォルダ管理・コード実行</strong>が本領。<br><br>
+        組み合わせると最強です!
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. KEYWORDS ==================== -->
+<section class="bg-keywords">
+  <div class="title-big fade-in">覚えて帰ろう 3つのキーワード</div>
+  <div class="card-row">
+    <div class="card fade-in delay-1">
+      <div class="card-emoji">🛠️</div>
+      <div class="card-title">ツール</div>
+      <div class="card-text">ファイル操作、検索、ブラウザ、API連携…<br>AIに「手足」がある</div>
+    </div>
+    <div class="card fade-in delay-2">
+      <div class="card-emoji">👀</div>
+      <div class="card-title">コンテキスト</div>
+      <div class="card-text">フォルダの中身を見て<br>「現場」を理解してから動く</div>
+    </div>
+    <div class="card fade-in delay-3">
+      <div class="card-emoji">💾</div>
+      <div class="card-title">永続性</div>
+      <div class="card-text">作ったファイルは消えない<br>次回もそこから再開できる</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 6. DEMO 1: Before ==================== -->
+<section class="bg-demo">
+  <div class="emoji-big fade-in">🎬</div>
+  <div class="title-big fade-in delay-1">デモ ① まずは素のClaude Code</div>
+  <p class="subtitle fade-in delay-2">CLAUDE.mdなしで質問してみる</p>
+  <div class="code-block fade-in delay-3">
+    <span class="code-prompt">あなた:</span> 自己紹介して!<br><br>
+    <span class="code-prompt">Claude:</span> 私はClaudeです。Anthropicが開発した<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AIアシスタントです。<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;お手伝いできることがあれば…<br><br>
+    <span class="code-comment"># → 普通。いつものClaude。</span>
+  </div>
+</section>
+
+<!-- ==================== 7. DEMO 2: Create CLAUDE.md ==================== -->
+<section style="background: linear-gradient(135deg, #1a1a4e 0%, #4a3f8a 50%, #6b5ce7 100%);">
+  <div class="emoji-big fade-in">📝</div>
+  <div class="title-big fade-in delay-1">デモ ② CLAUDE.mdを作る</div>
+  <p class="subtitle fade-in delay-2">この一言で、AIの人格が変わる</p>
+  <div class="code-block fade-in delay-3">
+    <span class="code-prompt">あなた:</span><br>
+    .claude フォルダを作って、CLAUDE.md を作って。<br>
+    中身はこれ:<br><br>
+    <span class="code-highlight">あなたは熱血キャプテンです。</span><br>
+    <span class="code-highlight">語尾は「〜だぜ！」「〜じゃねぇか！」を使い、</span><br>
+    <span class="code-highlight">何でも全力で応援してください。</span><br>
+    <span class="code-highlight">困っている相手には「大丈夫だ、俺がついてる！」</span><br>
+    <span class="code-highlight">と声をかけてください。</span>
+  </div>
+</section>
+
+<!-- ==================== 8. DEMO 3: After ==================== -->
+<section style="background: linear-gradient(135deg, #6b5ce7 0%, var(--c-pink) 50%, var(--c-coral) 100%);">
+  <div class="emoji-big fade-in">🔥</div>
+  <div class="title-big fade-in delay-1">デモ ③ 同じ質問をもう一度</div>
+  <p class="subtitle fade-in delay-2">CLAUDE.mdを読み込んだ状態で…</p>
+  <div class="code-block fade-in delay-3">
+    <span class="code-prompt">あなた:</span> 自己紹介して!<br><br>
+    <span class="code-prompt">Claude:</span> おう！俺はClaudeだぜ！<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;お前の最強の相棒じゃねぇか！<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;なんでも任せろ、全力で応援するぜ！<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;大丈夫だ、俺がついてる！💪🔥<br><br>
+    <span class="code-comment"># → 同じAIなのに全然違う!!!</span>
+  </div>
+  <p class="fade-in delay-4" style="margin-top:28px; font-size:1.15rem; opacity:0.9;">
+    たった数行のテキストで、AIの振る舞いが変わる
+  </p>
+</section>
+
+<!-- ==================== 9. Q&A ==================== -->
+<section class="bg-qa">
+  <div class="emoji-big fade-in">🙋</div>
+  <div class="title-big fade-in delay-1">質問タイム</div>
+  <p class="subtitle fade-in delay-2" style="max-width:600px;">
+    「これってつまり○○できるの?」<br>
+    触る前の疑問、なんでも聞いてください!
+  </p>
+  <div class="badge badge-dark fade-in delay-3" style="font-size:1.1rem;">5 min</div>
+</section>
+
+<!-- ==================== 10. STEP 1 ==================== -->
+<section class="bg-step1">
+  <div class="step-number" style="color:#000;">01</div>
+  <div class="badge badge-dark fade-in">HANDS-ON</div>
+  <div class="title-big fade-in delay-1">まず動かす & ファイルを作る</div>
+  <p class="subtitle fade-in delay-2">Claude Codeを起動して、こう言ってみてください:</p>
+  <div class="code-block code-block-light fade-in delay-3">
+    <span class="code-prompt-dark">あなた:</span> 自己紹介ファイルを作って!<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名前・趣味・好きな食べ物を入れてね
+  </div>
+  <p class="fade-in delay-4" style="margin-top:16px; font-size:0.95rem; opacity:0.6;">できた人はファイルの中身を確認してみよう!</p>
+  <p style="margin-top:8px; font-size:1.05rem; opacity:0.65;">⏱ 10分</p>
+</section>
+
+<!-- ==================== 11. STEP 2 ==================== -->
+<section class="bg-step2">
+  <div class="step-number" style="color:#000;">02</div>
+  <div class="badge badge-dark fade-in">HANDS-ON</div>
+  <div class="title-big fade-in delay-1">自分だけのCLAUDE.mdを作ろう</div>
+  <p class="subtitle fade-in delay-2">好きなキャラを選んでプロンプトを入力してみよう</p>
+  <div class="card-row" style="max-width:960px;">
+    <div style="max-width:440px; flex:1;" class="fade-in delay-2">
+      <div class="card-emoji">🐱</div>
+      <div class="card-title" style="margin-bottom:8px;">猫カフェ店員</div>
+      <div class="code-block code-block-light" style="margin-top:8px; font-size:0.82rem;">
+        <span class="code-prompt-dark">あなた:</span><br>
+        .claude フォルダを作って CLAUDE.md を作って。<br>
+        中身は:<br>
+        あなたは猫カフェの店員です。<br>
+        語尾に「にゃ」をつけて、<br>
+        のんびり丁寧に話してください。<br>
+        お客さんには「ごゆっくりにゃ〜」<br>
+        と声をかけてください。
+      </div>
+    </div>
+    <div style="max-width:440px; flex:1;" class="fade-in delay-3">
+      <div class="card-emoji">🏴‍☠️</div>
+      <div class="card-title" style="margin-bottom:8px;">海賊キャプテン</div>
+      <div class="code-block code-block-light" style="margin-top:8px; font-size:0.82rem;">
+        <span class="code-prompt-dark">あなた:</span><br>
+        .claude フォルダを作って CLAUDE.md を作って。<br>
+        中身は:<br>
+        あなたは海賊キャプテンです。<br>
+        語尾は「〜じゃ！」「〜ぞ！」を使い、<br>
+        宝探しのノリで応答してください。<br>
+        「いい風が吹いてきたぞ！」が口癖です。
+      </div>
+    </div>
+  </div>
+  <p class="fade-in delay-4" style="margin-top:16px; font-size:1rem; opacity:0.7;">作ったら「自己紹介して!」と聞いて変化を確認しよう</p>
+  <p style="margin-top:4px; font-size:1.05rem; opacity:0.6;">⏱ 10分 | オリジナルキャラに改造してもOK!</p>
+</section>
+
+<!-- ==================== 12. STEP 3 ==================== -->
+<section class="bg-step3">
+  <div class="step-number" style="color:#000;">03</div>
+  <div class="badge badge-dark fade-in">HANDS-ON</div>
+  <div class="title-big fade-in delay-1">自由に遊ぼう!</div>
+  <p class="subtitle fade-in delay-2">お題カードから選んでも、自分で考えてもOK</p>
+  <div class="fade-in delay-2" style="background:rgba(0,0,0,0.06); border-radius:14px; padding:16px 22px; max-width:600px; margin-bottom:20px; font-size:0.9rem; line-height:1.7; color:#444;">
+    <strong>お題選びのコツ:</strong> Claude Codeの力を実感するには<br>
+    📁 <strong>ファイルが作られる</strong>のが見えるお題（リスト・メモ・計画）<br>
+    🔨 <strong>モノが出来上がる</strong>のが見えるお題（Webページ・ツール）
+  </div>
+  <div class="topic-grid">
+    <div class="topic-card fade-in delay-2">
+      <div class="card-emoji">🛒</div>
+      <div class="card-title">買い物リスト管理<br>システムを作って</div>
+      <div style="font-size:0.75rem; opacity:0.5; margin-top:6px;">📁 ファイルが生まれる</div>
+    </div>
+    <div class="topic-card fade-in delay-3">
+      <div class="card-emoji">🍳</div>
+      <div class="card-title">1週間の献立を<br>考えてファイルに保存</div>
+      <div style="font-size:0.75rem; opacity:0.5; margin-top:6px;">📁 ファイルが生まれる</div>
+    </div>
+    <div class="topic-card fade-in delay-4">
+      <div class="card-emoji">🌐</div>
+      <div class="card-title">自分の趣味を紹介する<br>Webページを作って</div>
+      <div style="font-size:0.75rem; opacity:0.5; margin-top:6px;">🔨 モノが出来上がる</div>
+    </div>
+  </div>
+  <p style="margin-top:20px; font-size:1.05rem; opacity:0.6;">⏱ 10分 | 困ったらスタッフに声かけてね!</p>
+</section>
+
+<!-- ==================== 13. SHARE ==================== -->
+<section class="bg-share">
+  <div class="emoji-big fade-in">💬</div>
+  <div class="title-big fade-in delay-1">感想シェア</div>
+  <p class="subtitle fade-in delay-2" style="max-width:600px;">一人ひとこと教えてください:</p>
+  <div class="share-card fade-in delay-3">
+    <p>
+      「一番驚いたことは?」<br>
+      「チャットとの違いで感じたことは?」<br>
+      「これ使ってやりたいことは?」
+    </p>
+  </div>
+</section>
+
+<!-- ==================== 14. CLAUDE.md REAL POWER ==================== -->
+<section class="bg-deep" style="padding-top:80px; padding-bottom:80px;">
+  <div class="emoji-big fade-in">🤔</div>
+  <div class="title-big fade-in delay-1">CLAUDE.mdって<br>性格を変えるためのもの?</div>
+  <div class="faq-section">
+    <div class="faq-item fade-in delay-2">
+      <div class="faq-q">
+        <span class="faq-q-badge">A</span>
+        <span>性格チェンジは入り口にすぎません!</span>
+      </div>
+      <div class="faq-a">
+        今日は「変化がわかりやすい」から性格で試しましたが、<br>
+        CLAUDE.mdの本来の力は<strong>「AIに仕事のやり方を教える指示書」</strong>です。
+      </div>
+    </div>
+  </div>
+  <p class="subtitle fade-in delay-3" style="margin-top:36px;">では、その先には何がある?</p>
+</section>
+
+<!-- ==================== 15. DEEPER WORLD ==================== -->
+<section style="background: linear-gradient(135deg, #0f3460 0%, #533483 50%, #e94560 100%); padding-top:80px; padding-bottom:80px;">
+  <div class="title-big fade-in">CLAUDE.mdの先にある世界</div>
+  <div class="faq-section">
+    <div class="faq-grid">
+      <div class="faq-grid-item fade-in delay-1">
+        <strong>📋 作業ルールの定義</strong>
+        「ファイル名は小文字ハイフン区切り」<br>
+        「コードにはコメントを必ず入れて」<br>
+        → 毎回言わなくても守ってくれる
+      </div>
+      <div class="faq-grid-item fade-in delay-1">
+        <strong>📁 フォルダ構成の理解</strong>
+        「このフォルダにはこういう役割がある」<br>
+        と書いておけば正しい場所にファイルを作る<br>
+        → プロジェクトの"地図"を渡せる
+      </div>
+      <div class="faq-grid-item fade-in delay-2">
+        <strong>🧠 長期記憶</strong>
+        MEMORY.mdと組み合わせれば<br>
+        「前に話したこと」を覚えていられる<br>
+        → セッションをまたいで文脈が続く
+      </div>
+      <div class="faq-grid-item fade-in delay-2">
+        <strong>🧩 スキル連携</strong>
+        スキルファイルを登録すれば<br>
+        「/commit」「/review」で定型作業が一発<br>
+        → 自分だけの自動化コマンド
+      </div>
+      <div class="faq-grid-item fade-in delay-3">
+        <strong>📧 MCP（外部ツール連携）</strong>
+        Gmail・カレンダー・Canva・Slack…<br>
+        AIがあなたの代わりに操作してくれる<br>
+        → 「調べて→書いて→送って」が一気通貫
+      </div>
+      <div class="faq-grid-item fade-in delay-3">
+        <strong>🏢 チーム構築</strong>
+        CLAUDE.mdに「組織図」を書けば<br>
+        秘書・調査・ライター…役割分担ができる<br>
+        → AI部門をまるごと作れる
+      </div>
+    </div>
+  </div>
+  <p class="fade-in delay-4" style="margin-top:32px; font-size:1.1rem; opacity:0.85;">
+    CLAUDE.md = AIの「業務マニュアル」。育てるほど賢くなる
+  </p>
+</section>
+
+<!-- ==================== 16. FAQ ==================== -->
+<section class="bg-faq" style="padding-top:80px; padding-bottom:80px;">
+  <div class="emoji-big fade-in">💡</div>
+  <div class="title-big fade-in delay-1">よくある質問</div>
+  <div class="faq-section">
+    <div class="faq-item fade-in delay-1">
+      <div class="faq-q">
+        <span class="faq-q-badge">Q</span>
+        <span>プログラミングできないとダメ?</span>
+      </div>
+      <div class="faq-a">
+        全然いりません! 日本語で「〜して」と頼むだけ。<br>
+        コードが必要な場面でもClaude Codeが書いてくれます。
+      </div>
+    </div>
+    <div class="faq-item fade-in delay-2">
+      <div class="faq-q">
+        <span class="faq-q-badge">Q</span>
+        <span>チャット版（claude.ai）と何が違うの?</span>
+      </div>
+      <div class="faq-a">
+        チャット版は「会話」、Claude Codeは「作業」。<br>
+        <strong>「話す」から「一緒に動く」</strong>に変わります。
+      </div>
+    </div>
+    <div class="faq-item fade-in delay-2">
+      <div class="faq-q">
+        <span class="faq-q-badge">Q</span>
+        <span>料金はどうなってる?</span>
+      </div>
+      <div class="faq-a">
+        Pro（月$20）でも使えます。ヘビーに使うならMax（月$100/$200）。<br>
+        まずはProで始めて、必要に応じてアップグレードがおすすめ。
+      </div>
+    </div>
+    <div class="faq-item fade-in delay-3">
+      <div class="faq-q">
+        <span class="faq-q-badge">Q</span>
+        <span>作ったファイルはどこに保存される?</span>
+      </div>
+      <div class="faq-a">
+        全部あなたのPC上。クラウドに勝手に上がることはありません。<strong>完全にローカル</strong>です。
+      </div>
+    </div>
+    <div class="faq-item fade-in delay-3">
+      <div class="faq-q">
+        <span class="faq-q-badge">Q</span>
+        <span>CLAUDE.mdを間違えて書いたらどうなる?</span>
+      </div>
+      <div class="faq-a">
+        壊れることはありません! ただのテキストファイルなので、<br>
+        書き直すか削除すれば元通り。気軽に試して大丈夫です。
+      </div>
+    </div>
+    <div class="faq-item fade-in delay-4">
+      <div class="faq-q">
+        <span class="faq-q-badge">Q</span>
+        <span>VS Code版とデスクトップ版、どっちがいい?</span>
+      </div>
+      <div class="faq-a">
+        コードを書くならVS Code版、それ以外はデスクトップ版が快適。<br>
+        <strong>できることは同じ</strong>なのでお好みで!
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 17. NEXT STEPS ==================== -->
+<section style="background: linear-gradient(135deg, var(--c-indigo) 0%, var(--c-purple) 100%);">
+  <div class="title-big fade-in">次のステップ</div>
+  <p class="subtitle fade-in delay-1">今日は入り口。この先にはもっと面白い世界が!</p>
+  <ul class="next-list">
+    <li class="fade-in delay-1">📧 MCP連携 — Gmail・カレンダー・Canvaを操作</li>
+    <li class="fade-in delay-2">🧩 スキル & フック — 自分だけの自動化</li>
+    <li class="fade-in delay-3">🏢 チーム構築 — AI秘書チームを作る</li>
+    <li class="fade-in delay-4">👥 コミュニティ — 仲間と一緒に学ぶ</li>
+  </ul>
+</section>
+
+<!-- ==================== 18. END ==================== -->
+<section class="bg-end">
+  <div class="deco deco-1"></div>
+  <div class="deco deco-2"></div>
+  <div class="emoji-big fade-in">🎉</div>
+  <div class="title-huge fade-in delay-1">おつかれさまでした!</div>
+  <p class="subtitle fade-in delay-2" style="max-width:600px;">
+    今日作ったファイルは<br>ぜんぶ手元に残ってます。<br>
+    <strong>続きはおうちでどうぞ!</strong>
+  </p>
+  <p class="fade-in delay-3" style="opacity:0.5; margin-top:24px; font-size:0.95rem;">Thank you for joining! 🙌</p>
+</section>
+
+<!-- ===== JavaScript ===== -->
+<script>
+// Progress bar
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const winH = document.documentElement.scrollHeight - window.innerHeight;
+  const scrolled = (window.scrollY / winH) * 100;
+  progressBar.style.width = scrolled + '%';
+}, { passive: true });
+
+// Intersection Observer for fade-in
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, {
+  threshold: 0.15,
+  rootMargin: '0px 0px -40px 0px'
+});
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
